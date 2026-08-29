@@ -62,7 +62,7 @@ const code = await sock.requestPairingCode(phoneNumber);
     const msg = messages[0];
 
     if (!msg.message) return;
-
+console.log("📩 MESSAGE:", JSON.stringify(msg, null, 2));
     const from = msg.key.remoteJid;
 
     const text =
