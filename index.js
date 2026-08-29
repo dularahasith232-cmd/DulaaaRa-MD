@@ -27,7 +27,9 @@ async function startDularaMD() {
     }
 
     try {
-      const code = await sock.requestPairingCode(phoneNumber);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+const code = await sock.requestPairingCode(phoneNumber);
       console.log("================================");
       console.log("📱 DULARA MD PAIRING CODE");
       console.log("🔑 " + code);
