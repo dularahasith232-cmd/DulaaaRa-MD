@@ -61,7 +61,7 @@ const code = await sock.requestPairingCode(phoneNumber);
   sock.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages[0];
 
-    if (!msg.message || msg.key.fromMe) return;
+    if (!msg.message) return;
 
     const from = msg.key.remoteJid;
 
