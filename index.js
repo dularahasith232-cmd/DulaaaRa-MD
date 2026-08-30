@@ -45,11 +45,7 @@ async function startDularaMD() {
         process.env.PHONE_NUMBER;
 
       if (!phoneNumber) {
-
-        console.log(
-          "❌ PHONE_NUMBER is not set."
-        );
-
+        console.log("❌ PHONE_NUMBER is not set.");
         isConnecting = false;
         return;
       }
@@ -187,10 +183,7 @@ async function startDularaMD() {
 
           const msg = messages[0];
 
-          if (
-            !msg ||
-            !msg.message
-          ) {
+          if (!msg || !msg.message) {
             return;
           }
 
@@ -213,9 +206,7 @@ async function startDularaMD() {
           // 🎵 YOUTUBE SONG SEARCH
           // ==================================
 
-          if (
-            command.startsWith(".song ")
-          ) {
+          if (command.startsWith(".song ")) {
 
             const query =
               command.slice(6).trim();
@@ -223,10 +214,8 @@ async function startDularaMD() {
 
             if (!query) {
 
-              await sock.sendMessage(
-                from,
-                {
-                  text:
+              await sock.sendMessage(from, {
+                text:
 `╭───「 🎵 DULARA MD 」───╮
 
 ❌ Song name එකක් දෙන්න.
@@ -236,24 +225,18 @@ async function startDularaMD() {
 .song Deviyange Bare
 
 ╰────────────────────╯`
-                }
-              );
+              });
 
               return;
             }
 
 
-            if (
-              !process.env.YOUTUBE_API_KEY
-            ) {
+            if (!process.env.YOUTUBE_API_KEY) {
 
-              await sock.sendMessage(
-                from,
-                {
-                  text:
-                    "❌ YouTube API Key එක setup කරලා නැහැ."
-                }
-              );
+              await sock.sendMessage(from, {
+                text:
+                  "❌ YouTube API Key එක setup කරලා නැහැ."
+              });
 
               return;
             }
@@ -262,28 +245,23 @@ async function startDularaMD() {
             try {
 
               // 🤖 Reaction
+
               try {
 
-                await sock.sendMessage(
-                  from,
-                  {
-                    react: {
-                      text: "🤖",
-                      key: msg.key
-                    }
+                await sock.sendMessage(from, {
+                  react: {
+                    text: "🤖",
+                    key: msg.key
                   }
-                );
+                });
 
               } catch {}
 
 
-              await sock.sendMessage(
-                from,
-                {
-                  text:
-                    "🔎 YouTube search කරමින්...\n\n⏳ Please wait..."
-                }
-              );
+              await sock.sendMessage(from, {
+                text:
+                  "🔎 YouTube search කරමින්...\n\n⏳ Please wait..."
+              });
 
 
               const response =
@@ -311,23 +289,17 @@ async function startDularaMD() {
                 response.data.items || [];
 
 
-              if (
-                results.length === 0
-              ) {
+              if (results.length === 0) {
 
-                await sock.sendMessage(
-                  from,
-                  {
-                    text:
-                      "❌ Song එක හම්බුණේ නැහැ."
-                  }
-                );
+                await sock.sendMessage(from, {
+                  text:
+                    "❌ Song එක හම්බුණේ නැහැ."
+                });
 
                 return;
               }
 
 
-              // Save results
               songSelections.set(
                 from,
                 results
@@ -373,12 +345,9 @@ async function startDularaMD() {
 🤖 Number එක විතරක් යවන්න.`;
 
 
-              await sock.sendMessage(
-                from,
-                {
-                  text: message
-                }
-              );
+              await sock.sendMessage(from, {
+                text: message
+              });
 
             } catch (error) {
 
@@ -388,13 +357,10 @@ async function startDularaMD() {
               );
 
 
-              await sock.sendMessage(
-                from,
-                {
-                  text:
-                    "❌ YouTube search කරන්න බැරි වුණා."
-                }
-              );
+              await sock.sendMessage(from, {
+                text:
+                  "❌ YouTube search කරන්න බැරි වුණා."
+              });
             }
 
 
@@ -425,13 +391,10 @@ async function startDularaMD() {
 
             if (!selected) {
 
-              await sock.sendMessage(
-                from,
-                {
-                  text:
-                    "❌ ඒ number එකේ result එකක් නැහැ."
-                }
-              );
+              await sock.sendMessage(from, {
+                text:
+                  "❌ ඒ number එකේ result එකක් නැහැ."
+              });
 
               return;
             }
@@ -449,26 +412,20 @@ async function startDularaMD() {
               selected.id.videoId;
 
 
-            // ⏳ Reaction
             try {
 
-              await sock.sendMessage(
-                from,
-                {
-                  react: {
-                    text: "⏳",
-                    key: msg.key
-                  }
+              await sock.sendMessage(from, {
+                react: {
+                  text: "⏳",
+                  key: msg.key
                 }
-              );
+              });
 
             } catch {}
 
 
-            await sock.sendMessage(
-              from,
-              {
-                text:
+            await sock.sendMessage(from, {
+              text:
 `╭───「 🎵 SELECTED 」───╮
 
 🎵 *${title}*
@@ -480,19 +437,11 @@ async function startDularaMD() {
 ⏳ Selected successfully!
 
 📥 Authorized audio URL එකක් තිබේ නම්
+
 .songurl <audio-url>
-භාවිතා කරන්න.
 
 ╰────────────────────╯`
-              }
-            );
-
-
-            // IMPORTANT:
-            // Selection එක delete කරන්නේ නැහැ.
-            // ඒ නිසා 1 / 2 / 3 / 4 / 5
-            // ඕනෑම එකක් නැවත select කරන්න පුළුවන්.
-
+            });
 
             return;
           }
@@ -512,19 +461,16 @@ async function startDularaMD() {
 
             if (!audioUrl) {
 
-              await sock.sendMessage(
-                from,
-                {
-                  text:
+              await sock.sendMessage(from, {
+                text:
 `🎵 *SONG URL*
 
 📌 Example:
 
 .songurl https://example.com/song.mp3
 
-⚠️ ඔයාට අවසර ඇති audio URL එකක් පමණක් භාවිතා කරන්න.`
-                }
-              );
+⚠️ අවසර ඇති audio URL එකක් පමණක් භාවිතා කරන්න.`
+              });
 
               return;
             }
@@ -534,72 +480,57 @@ async function startDularaMD() {
               !audioUrl.startsWith("https://")
             ) {
 
-              await sock.sendMessage(
-                from,
-                {
-                  text:
-                    "❌ HTTPS audio URL එකක් දෙන්න."
-                }
-              );
+              await sock.sendMessage(from, {
+                text:
+                  "❌ HTTPS audio URL එකක් දෙන්න."
+              });
 
               return;
             }
 
 
-            // ⏳ Reaction
             try {
 
-              await sock.sendMessage(
-                from,
-                {
-                  react: {
-                    text: "⏳",
-                    key: msg.key
-                  }
+              await sock.sendMessage(from, {
+                react: {
+                  text: "⏳",
+                  key: msg.key
                 }
-              );
+              });
 
             } catch {}
 
 
-            await sock.sendMessage(
-              from,
-              {
-                text:
-                  "🎵 Audio එක ලබාගනිමින්...\n⏳ Please wait..."
-              }
-            );
+            await sock.sendMessage(from, {
+              text:
+                "🎵 Audio එක ලබාගනිමින්...\n⏳ Please wait..."
+            });
 
 
             try {
 
-              await sock.sendMessage(
-                from,
-                {
-                  audio: {
-                    url: audioUrl
-                  },
+              await sock.sendMessage(from, {
 
-                  mimetype:
-                    "audio/mpeg",
+                audio: {
+                  url: audioUrl
+                },
 
-                  ptt: false
-                }
-              );
+                mimetype:
+                  "audio/mpeg",
+
+                ptt: false
+
+              });
 
 
-              // ✅ Reaction
               try {
 
-                await sock.sendMessage(
-                  from,
-                  {
-                    react: {
-                      text: "✅",
-                      key: msg.key
-                    }
+                await sock.sendMessage(from, {
+                  react: {
+                    text: "✅",
+                    key: msg.key
                   }
-                );
+                });
 
               } catch {}
 
@@ -612,13 +543,134 @@ async function startDularaMD() {
               );
 
 
-              await sock.sendMessage(
-                from,
-                {
-                  text:
-                    "❌ Audio එක send කරන්න බැරි වුණා."
+              await sock.sendMessage(from, {
+                text:
+                  "❌ Audio එක send කරන්න බැරි වුණා."
+              });
+            }
+
+
+            return;
+          }
+
+
+          // ==================================
+          // 🎬 AUTHORIZED VIDEO URL
+          // ==================================
+
+          if (
+            command.startsWith(".video ")
+          ) {
+
+            const videoUrl =
+              text.trim().slice(7).trim();
+
+
+            if (!videoUrl) {
+
+              await sock.sendMessage(from, {
+                text:
+`╭───「 🎬 DULARA MD 」───╮
+
+❌ Video URL එකක් දෙන්න.
+
+📌 Example:
+
+.video https://example.com/video.mp4
+
+⚠️ අවසර ඇති direct video URL එකක් පමණක් භාවිතා කරන්න.
+
+╰────────────────────╯`
+              });
+
+              return;
+            }
+
+
+            if (
+              !videoUrl.startsWith("https://")
+            ) {
+
+              await sock.sendMessage(from, {
+                text:
+                  "❌ HTTPS video URL එකක් දෙන්න."
+              });
+
+              return;
+            }
+
+
+            // 🤖 Reaction
+
+            try {
+
+              await sock.sendMessage(from, {
+                react: {
+                  text: "🤖",
+                  key: msg.key
                 }
+              });
+
+            } catch {}
+
+
+            await sock.sendMessage(from, {
+              text:
+`╭───「 🎬 VIDEO 」───╮
+
+⏳ Video එක ලබාගනිමින්...
+
+🤖 Please wait...
+
+╰────────────────────╯`
+            });
+
+
+            try {
+
+              await sock.sendMessage(from, {
+
+                video: {
+                  url: videoUrl
+                },
+
+                mimetype:
+                  "video/mp4",
+
+                caption:
+`🎬 *DULARA MD*
+
+✅ Video received successfully!`
+
+              });
+
+
+              try {
+
+                await sock.sendMessage(from, {
+                  react: {
+                    text: "✅",
+                    key: msg.key
+                  }
+                });
+
+              } catch {}
+
+
+            } catch (error) {
+
+              console.log(
+                "❌ Video Error:",
+                error?.message || error
               );
+
+
+              await sock.sendMessage(from, {
+                text:
+`❌ Video එක send කරන්න බැරි වුණා.
+
+🔧 URL එක valid ද කියලා check කරන්න.`
+              });
             }
 
 
@@ -634,17 +686,14 @@ async function startDularaMD() {
             command === ".ping"
           ) {
 
-            await sock.sendMessage(
-              from,
-              {
-                text:
+            await sock.sendMessage(from, {
+              text:
 `🏓 *Pong!*
 
 🤖 *Dulara MD*
 ⚡ Bot is Online!
 🟢 Status: Connected`
-              }
-            );
+            });
 
             return;
           }
@@ -658,10 +707,8 @@ async function startDularaMD() {
             command === ".menu"
           ) {
 
-            await sock.sendMessage(
-              from,
-              {
-                text:
+            await sock.sendMessage(from, {
+              text:
 `╭━━━「 🤖 DULARA MD 」━━━╮
 
 ⚡ *BOT COMMANDS*
@@ -688,6 +735,12 @@ Example:
 
 ━━━━━━━━━━━━━━━━━━
 
+🎬 *VIDEO*
+
+🎬 .video <authorized video URL>
+
+━━━━━━━━━━━━━━━━━━
+
 🎬 *MOVIE*
 
 🎬 .movie <movie name>
@@ -696,11 +749,9 @@ Example:
 
 📥 *DOWNLOAD*
 
-🎥 .video <YouTube link>
+📁 .gdrive <authorized link>
 
-📁 .gdrive <link>
-
-📁 .mediafire <link>
+📁 .mediafire <authorized link>
 
 ━━━━━━━━━━━━━━━━━━
 
@@ -709,8 +760,7 @@ Example:
 📲 .telegram/<channel>
 
 ╰━━━━━━━━━━━━━━━━━━╯`
-              }
-            );
+            });
 
             return;
           }
@@ -724,18 +774,15 @@ Example:
             command === ".owner"
           ) {
 
-            await sock.sendMessage(
-              from,
-              {
-                text:
+            await sock.sendMessage(from, {
+              text:
 `╭───「 👑 OWNER 」───╮
 
 🤖 Dulara MD
 👑 Bot Owner
 
 ╰──────────────────╯`
-              }
-            );
+            });
 
             return;
           }
@@ -749,10 +796,8 @@ Example:
             command === ".info"
           ) {
 
-            await sock.sendMessage(
-              from,
-              {
-                text:
+            await sock.sendMessage(from, {
+              text:
 `╭───「 ℹ️ DULARA MD 」───╮
 
 🤖 Dulara MD
@@ -760,11 +805,11 @@ Example:
 🟢 Status: Online
 
 ╰────────────────────╯`
-              }
-            );
+            });
 
             return;
           }
+
 
         } catch (error) {
 
@@ -772,7 +817,9 @@ Example:
             "❌ Message Error:",
             error?.message || error
           );
+
         }
+
       }
     );
 
