@@ -1,16 +1,12 @@
 {
   "name": "dulaaara-md",
   "version": "1.0.0",
-  "description": "DulaaaRa MD WhatsApp Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "latest",
-    "pino": "latest",
-    "axios": "latest",
-    "cheerio": "latest",
-    "node-fetch": "latest"
+    "pino": "latest"
   }
 }
