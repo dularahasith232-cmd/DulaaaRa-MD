@@ -1,13 +1,13 @@
 const {
   default: makeWASocket,
   useMultiFileAuthState,
-  DisconnectReason,
-  Browsers
+  DisconnectReason
 } = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
 
 let isConnecting = false;
+
 
 // ========================================
 // 🤖 DULARA MD
@@ -24,15 +24,19 @@ async function startDularaMD() {
     const { state, saveCreds } =
       await useMultiFileAuthState("./session");
 
+
     const sock = makeWASocket({
       auth: state,
       logger: pino({ level: "silent" }),
-      browser: Browsers.macOS("Desktop"),
-      printQRInTerminal: false,
-      syncFullHistory: false
+      printQRInTerminal: false
     });
 
-    sock.ev.on("creds.update", saveCreds);
+
+    sock.ev.on(
+      "creds.update",
+      saveCreds
+    );
+
 
     // ========================================
     // 📱 WHATSAPP PAIRING
@@ -53,22 +57,25 @@ async function startDularaMD() {
         return;
       }
 
+
       try {
 
         console.log(
           "⏳ Requesting WhatsApp pairing code..."
         );
 
-        const cleanNumber =
-          phoneNumber
-            .replace(/\+/g, "")
-            .replace(/\s/g, "")
-            .replace(/-/g, "");
+
+        // Give the socket time to initialize
+        await new Promise(resolve =>
+          setTimeout(resolve, 15000)
+        );
+
 
         const code =
           await sock.requestPairingCode(
-            cleanNumber
+            phoneNumber.replace(/\D/g, "")
           );
+
 
         console.log(
           "================================"
@@ -87,12 +94,13 @@ async function startDularaMD() {
         );
 
         console.log(
-          "📱 WhatsApp → Linked devices → Link a device"
+          "WhatsApp → Linked devices → Link a device"
         );
 
         console.log(
-          "🔑 Enter the code above"
+          "Enter the code above."
         );
+
 
       } catch (error) {
 
@@ -106,7 +114,9 @@ async function startDularaMD() {
       }
     }
 
+
     isConnecting = false;
+
 
     // ========================================
     // 🔌 CONNECTION
@@ -131,24 +141,18 @@ async function startDularaMD() {
           );
         }
 
+
         if (connection === "close") {
 
           const statusCode =
             lastDisconnect?.error?.output?.statusCode;
+
 
           console.log(
             "❌ Connection closed. Status:",
             statusCode
           );
 
-          if (!state.creds.registered) {
-
-            console.log(
-              "📱 Waiting for WhatsApp pairing..."
-            );
-
-            return;
-          }
 
           if (
             statusCode ===
@@ -162,9 +166,11 @@ async function startDularaMD() {
             return;
           }
 
+
           console.log(
             "🔄 Reconnecting in 5 seconds..."
           );
+
 
           setTimeout(() => {
 
@@ -176,6 +182,7 @@ async function startDularaMD() {
         }
       }
     );
+
 
     // ========================================
     // 💬 MESSAGE HANDLER
@@ -189,6 +196,7 @@ async function startDularaMD() {
 
           const msg = messages[0];
 
+
           if (
             !msg ||
             !msg.message ||
@@ -197,16 +205,20 @@ async function startDularaMD() {
             return;
           }
 
+
           const from =
             msg.key.remoteJid;
+
 
           const text =
             msg.message.conversation ||
             msg.message.extendedTextMessage?.text ||
             "";
 
+
           const command =
             text.trim().toLowerCase();
+
 
           // ==================================
           // 🏓 PING
@@ -214,28 +226,20 @@ async function startDularaMD() {
 
           if (command === ".ping") {
 
-            try {
-
-              await sock.sendMessage(from, {
-                react: {
-                  text: "🏓",
-                  key: msg.key
-                }
-              });
-
-            } catch {}
-
             await sock.sendMessage(from, {
-              text:
-`🏓 *Pong!*
 
-🤖 *DULARA MD*
-⚡ Bot is Online!
+              text:
+`🏓 *PONG!*
+
+🤖 DULARA MD
+⚡ Bot is Online
 🟢 Status: Connected`
+
             });
 
             return;
           }
+
 
           // ==================================
           // 📋 MENU
@@ -244,6 +248,7 @@ async function startDularaMD() {
           if (command === ".menu") {
 
             await sock.sendMessage(from, {
+
               text:
 `╭━━━「 🤖 DULARA MD 」━━━╮
 
@@ -256,21 +261,30 @@ async function startDularaMD() {
 
 ━━━━━━━━━━━━━━━━━━
 
-📥 *MEDIA*
+🎬 *VIDEO*
 
-🎬 .video <direct URL>
+.video <direct-video-url>
+
+Example:
+
+.video https://example.com/video.mp4
 
 ━━━━━━━━━━━━━━━━━━
 
-🤖 *DULARA MD*
-⚡ Version: 1.0.0
-🟢 Status: Online
+🎬 *MOVIE*
+
+.movie <movie name>
+
+Movie search/download automation
+is not enabled in this version.
 
 ╰━━━━━━━━━━━━━━━━━━╯`
+
             });
 
             return;
           }
+
 
           // ==================================
           // 👑 OWNER
@@ -279,6 +293,7 @@ async function startDularaMD() {
           if (command === ".owner") {
 
             await sock.sendMessage(from, {
+
               text:
 `╭───「 👑 OWNER 」───╮
 
@@ -287,10 +302,12 @@ async function startDularaMD() {
 👑 Bot Owner
 
 ╰──────────────────╯`
+
             });
 
             return;
           }
+
 
           // ==================================
           // ℹ️ INFO
@@ -299,22 +316,25 @@ async function startDularaMD() {
           if (command === ".info") {
 
             await sock.sendMessage(from, {
+
               text:
 `╭───「 ℹ️ DULARA MD 」───╮
 
-🤖 Dulara MD
+🤖 DULARA MD
 ⚡ Version: 1.0.0
 🟢 Status: Online
 📱 WhatsApp: Connected
 
 ╰────────────────────╯`
+
             });
 
             return;
           }
 
+
           // ==================================
-          // 🎬 DIRECT VIDEO URL
+          // 🎬 DIRECT VIDEO
           // ==================================
 
           if (command.startsWith(".video ")) {
@@ -322,48 +342,57 @@ async function startDularaMD() {
             const videoUrl =
               text.trim().slice(7).trim();
 
+
             if (!videoUrl) {
 
               await sock.sendMessage(from, {
+
                 text:
-`╭───「 🎬 VIDEO 」───╮
+`🎬 *VIDEO*
 
-❌ Video URL එකක් දෙන්න.
+❌ Direct video URL එකක් දෙන්න.
 
-📌 Example:
+Example:
 
-.video https://example.com/video.mp4
+.video https://example.com/video.mp4`
 
-╰──────────────────╯`
               });
 
               return;
             }
+
 
             if (
               !videoUrl.startsWith("https://")
             ) {
 
               await sock.sendMessage(from, {
+
                 text:
                   "❌ HTTPS URL එකක් දෙන්න."
+
               });
 
               return;
             }
 
+
             try {
 
               await sock.sendMessage(from, {
+
                 react: {
                   text: "⏳",
                   key: msg.key
                 }
+
               });
 
             } catch {}
 
+
             await sock.sendMessage(from, {
+
               text:
 `╭───「 🎬 VIDEO 」───╮
 
@@ -372,31 +401,42 @@ async function startDularaMD() {
 🤖 Please wait...
 
 ╰──────────────────╯`
+
             });
+
 
             try {
 
               await sock.sendMessage(from, {
+
                 video: {
                   url: videoUrl
                 },
-                mimetype: "video/mp4",
+
+                mimetype:
+                  "video/mp4",
+
                 caption:
 `🎬 *DULARA MD*
 
 ✅ Video sent successfully!`
+
               });
+
 
               try {
 
                 await sock.sendMessage(from, {
+
                   react: {
                     text: "✅",
                     key: msg.key
                   }
+
                 });
 
               } catch {}
+
 
             } catch (error) {
 
@@ -405,16 +445,21 @@ async function startDularaMD() {
                 error?.message || error
               );
 
+
               await sock.sendMessage(from, {
+
                 text:
 `❌ Video එක send කරන්න බැරි වුණා.
 
 🔧 Direct video URL එක valid ද බලන්න.`
+
               });
+
             }
 
             return;
           }
+
 
         } catch (error) {
 
@@ -424,8 +469,10 @@ async function startDularaMD() {
           );
 
         }
+
       }
     );
+
 
   } catch (error) {
 
@@ -436,9 +483,13 @@ async function startDularaMD() {
 
     isConnecting = false;
 
+
     setTimeout(() => {
+
       startDularaMD();
+
     }, 5000);
+
   }
 }
 
@@ -458,5 +509,6 @@ console.log(
 console.log(
   "================================"
 );
+
 
 startDularaMD();
