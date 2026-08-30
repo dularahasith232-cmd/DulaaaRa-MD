@@ -5,11 +5,8 @@ const {
 } = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
-const axios = require("axios");
 
-const songSelections = new Map();
 let isConnecting = false;
-
 
 // ========================================
 // 🤖 DULARA MD
@@ -34,7 +31,6 @@ async function startDularaMD() {
 
     sock.ev.on("creds.update", saveCreds);
 
-
     // ========================================
     // 📱 WHATSAPP PAIRING
     // ========================================
@@ -45,7 +41,11 @@ async function startDularaMD() {
         process.env.PHONE_NUMBER;
 
       if (!phoneNumber) {
-        console.log("❌ PHONE_NUMBER is not set.");
+
+        console.log(
+          "❌ PHONE_NUMBER is not set."
+        );
+
         isConnecting = false;
         return;
       }
@@ -61,16 +61,33 @@ async function startDularaMD() {
         );
 
         const code =
-          await sock.requestPairingCode(phoneNumber);
+          await sock.requestPairingCode(
+            phoneNumber
+          );
 
-        console.log("================================");
-        console.log("📱 DULARA MD PAIRING CODE");
-        console.log("🔑 " + code);
-        console.log("================================");
+        console.log(
+          "================================"
+        );
+
+        console.log(
+          "📱 DULARA MD PAIRING CODE"
+        );
+
+        console.log(
+          "🔑 " + code
+        );
+
+        console.log(
+          "================================"
+        );
+
         console.log(
           "📱 WhatsApp → Linked devices → Link a device"
         );
-        console.log("🔑 Enter the code above");
+
+        console.log(
+          "🔑 Enter the code above"
+        );
 
       } catch (error) {
 
@@ -86,7 +103,6 @@ async function startDularaMD() {
 
     isConnecting = false;
 
-
     // ========================================
     // 🔌 CONNECTION
     // ========================================
@@ -97,12 +113,18 @@ async function startDularaMD() {
 
         if (connection === "open") {
 
-          console.log("================================");
-          console.log("✅ DULARA MD CONNECTED!");
-          console.log("================================");
+          console.log(
+            "================================"
+          );
 
+          console.log(
+            "✅ DULARA MD CONNECTED!"
+          );
+
+          console.log(
+            "================================"
+          );
         }
-
 
         if (connection === "close") {
 
@@ -114,7 +136,6 @@ async function startDularaMD() {
             statusCode
           );
 
-
           if (!state.creds.registered) {
 
             console.log(
@@ -123,7 +144,6 @@ async function startDularaMD() {
 
             return;
           }
-
 
           if (
             statusCode ===
@@ -137,11 +157,9 @@ async function startDularaMD() {
             return;
           }
 
-
           console.log(
             "🔄 Reconnecting in 5 seconds..."
           );
-
 
           setTimeout(() => {
 
@@ -153,7 +171,6 @@ async function startDularaMD() {
         }
       }
     );
-
 
     // ========================================
     // 💬 MESSAGE HANDLER
@@ -167,7 +184,13 @@ async function startDularaMD() {
 
           const msg = messages[0];
 
-          if (!msg || !msg.message) return;
+          if (
+            !msg ||
+            !msg.message ||
+            msg.key.fromMe
+          ) {
+            return;
+          }
 
           const from =
             msg.key.remoteJid;
@@ -180,459 +203,34 @@ async function startDularaMD() {
           const command =
             text.trim().toLowerCase();
 
-
-          // ==================================
-          // 🎵 SONG SEARCH
-          // ==================================
-
-          if (command.startsWith(".song ")) {
-
-            const query =
-              command.slice(6).trim();
-
-            if (!query) {
-
-              await sock.sendMessage(from, {
-                text:
-`╭───「 🎵 DULARA MD 」───╮
-
-❌ Song name එකක් දෙන්න.
-
-📌 Example:
-.song Deviyange Bare
-
-╰────────────────────╯`
-              });
-
-              return;
-            }
-
-
-            if (!process.env.YOUTUBE_API_KEY) {
-
-              await sock.sendMessage(from, {
-                text:
-                  "❌ YouTube API Key එක setup කරලා නැහැ."
-              });
-
-              return;
-            }
-
-
-            try {
-
-              // 🤖 Reaction
-              try {
-
-                await sock.sendMessage(from, {
-                  react: {
-                    text: "🤖",
-                    key: msg.key
-                  }
-                });
-
-              } catch {}
-
-
-              await sock.sendMessage(from, {
-                text:
-                  "🔎 YouTube search කරමින්...\n\n⏳ Please wait..."
-              });
-
-
-              const response =
-                await axios.get(
-                  "https://www.googleapis.com/youtube/v3/search",
-                  {
-                    params: {
-                      part: "snippet",
-                      q: query,
-                      type: "video",
-                      maxResults: 5,
-                      key:
-                        process.env.YOUTUBE_API_KEY
-                    }
-                  }
-                );
-
-
-              const results =
-                response.data.items || [];
-
-
-              if (!results.length) {
-
-                await sock.sendMessage(from, {
-                  text:
-                    "❌ Song එක හම්බුණේ නැහැ."
-                });
-
-                return;
-              }
-
-
-              songSelections.set(
-                from,
-                results
-              );
-
-
-              let message =
-`╭───「 🎵 DULARA MD 」───╮
-
-🔎 *YouTube Search Results*
-
-`;
-
-
-              results.forEach(
-                (item, index) => {
-
-                  const title =
-                    item.snippet.title;
-
-                  const channel =
-                    item.snippet.channelTitle;
-
-                  const videoId =
-                    item.id.videoId;
-
-                  message +=
-`${index + 1}️⃣ *${title}*
-👤 ${channel}
-🔗 https://youtu.be/${videoId}
-
-`;
-                }
-              );
-
-
-              message +=
-`╰────────────────────╯
-
-📌 *Reply කරන්න: 1 - ${results.length}*
-
-🤖 Number එක විතරක් යවන්න.`;
-
-
-              await sock.sendMessage(from, {
-                text: message
-              });
-
-            } catch (error) {
-
-              console.log(
-                "❌ YouTube Search Error:",
-                error?.message || error
-              );
-
-
-              await sock.sendMessage(from, {
-                text:
-                  "❌ YouTube search කරන්න බැරි වුණා."
-              });
-            }
-
-
-            return;
-          }
-
-
-          // ==================================
-          // 🔢 SONG SELECTION
-          // ==================================
-
-          if (
-            /^[1-5]$/.test(command) &&
-            songSelections.has(from)
-          ) {
-
-            const results =
-              songSelections.get(from);
-
-            const index =
-              Number(command) - 1;
-
-            const selected =
-              results[index];
-
-
-            if (!selected) {
-
-              await sock.sendMessage(from, {
-                text:
-                  "❌ ඒ number එකේ result එකක් නැහැ."
-              });
-
-              return;
-            }
-
-
-            const title =
-              selected.snippet.title;
-
-            const channel =
-              selected.snippet.channelTitle;
-
-            const videoId =
-              selected.id.videoId;
-
-
-            try {
-
-              await sock.sendMessage(from, {
-                react: {
-                  text: "⏳",
-                  key: msg.key
-                }
-              });
-
-            } catch {}
-
-
-            await sock.sendMessage(from, {
-              text:
-`╭───「 🎵 SELECTED 」───╮
-
-🎵 *${title}*
-
-👤 Channel: ${channel}
-
-🔗 https://youtu.be/${videoId}
-
-⏳ Selected successfully!
-
-╰────────────────────╯`
-            });
-
-            return;
-          }
-
-
-          // ==================================
-          // 📥 SONG URL
-          // ==================================
-
-          if (command.startsWith(".songurl ")) {
-
-            const audioUrl =
-              text.trim().slice(9).trim();
-
-
-            if (!audioUrl) {
-
-              await sock.sendMessage(from, {
-                text:
-`🎵 *SONG URL*
-
-📌 Example:
-
-.songurl https://example.com/song.mp3`
-              });
-
-              return;
-            }
-
-
-            if (!audioUrl.startsWith("https://")) {
-
-              await sock.sendMessage(from, {
-                text:
-                  "❌ HTTPS audio URL එකක් දෙන්න."
-              });
-
-              return;
-            }
-
-
-            try {
-
-              await sock.sendMessage(from, {
-                react: {
-                  text: "⏳",
-                  key: msg.key
-                }
-              });
-
-            } catch {}
-
-
-            await sock.sendMessage(from, {
-              text:
-                "🎵 Audio එක ලබාගනිමින්...\n⏳ Please wait..."
-            });
-
-
-            try {
-
-              await sock.sendMessage(from, {
-                audio: {
-                  url: audioUrl
-                },
-                mimetype: "audio/mpeg",
-                ptt: false
-              });
-
-
-              try {
-
-                await sock.sendMessage(from, {
-                  react: {
-                    text: "✅",
-                    key: msg.key
-                  }
-                });
-
-              } catch {}
-
-
-            } catch (error) {
-
-              console.log(
-                "❌ Audio Error:",
-                error?.message || error
-              );
-
-
-              await sock.sendMessage(from, {
-                text:
-                  "❌ Audio එක send කරන්න බැරි වුණා."
-              });
-            }
-
-
-            return;
-          }
-
-
-          // ==================================
-          // 🎬 VIDEO URL
-          // ==================================
-
-          if (command.startsWith(".video ")) {
-
-            const videoUrl =
-              text.trim().slice(7).trim();
-
-
-            if (!videoUrl) {
-
-              await sock.sendMessage(from, {
-                text:
-`╭───「 🎬 DULARA MD 」───╮
-
-❌ Video URL එකක් දෙන්න.
-
-📌 Example:
-.video https://example.com/video.mp4
-
-╰────────────────────╯`
-              });
-
-              return;
-            }
-
-
-            if (!videoUrl.startsWith("https://")) {
-
-              await sock.sendMessage(from, {
-                text:
-                  "❌ HTTPS video URL එකක් දෙන්න."
-              });
-
-              return;
-            }
-
-
-            try {
-
-              await sock.sendMessage(from, {
-                react: {
-                  text: "🤖",
-                  key: msg.key
-                }
-              });
-
-            } catch {}
-
-
-            await sock.sendMessage(from, {
-              text:
-`╭───「 🎬 VIDEO 」───╮
-
-⏳ Video එක ලබාගනිමින්...
-
-🤖 Please wait...
-
-╰────────────────────╯`
-            });
-
-
-            try {
-
-              await sock.sendMessage(from, {
-                video: {
-                  url: videoUrl
-                },
-                mimetype: "video/mp4",
-                caption:
-`🎬 *DULARA MD*
-
-✅ Video received successfully!`
-              });
-
-
-              try {
-
-                await sock.sendMessage(from, {
-                  react: {
-                    text: "✅",
-                    key: msg.key
-                  }
-                });
-
-              } catch {}
-
-
-            } catch (error) {
-
-              console.log(
-                "❌ Video Error:",
-                error?.message || error
-              );
-
-
-              await sock.sendMessage(from, {
-                text:
-`❌ Video එක send කරන්න බැරි වුණා.
-
-🔧 URL එක valid ද කියලා check කරන්න.`
-              });
-            }
-
-
-            return;
-          }
-
-
           // ==================================
           // 🏓 PING
           // ==================================
 
           if (command === ".ping") {
 
+            try {
+
+              await sock.sendMessage(from, {
+                react: {
+                  text: "🏓",
+                  key: msg.key
+                }
+              });
+
+            } catch {}
+
             await sock.sendMessage(from, {
               text:
 `🏓 *Pong!*
 
-🤖 *Dulara MD*
+🤖 *DULARA MD*
 ⚡ Bot is Online!
 🟢 Status: Connected`
             });
 
             return;
           }
-
 
           // ==================================
           // 📋 MENU
@@ -653,51 +251,21 @@ async function startDularaMD() {
 
 ━━━━━━━━━━━━━━━━━━
 
-🎵 *SONG*
+📥 *MEDIA*
 
-🎵 .song <song name>
-
-Example:
-.song Deviyange Bare
-
-🔢 Reply:
-1 / 2 / 3 / 4 / 5
-
-📥 Audio URL:
-.songurl <audio-url>
+🎬 .video <direct URL>
 
 ━━━━━━━━━━━━━━━━━━
 
-🎬 *VIDEO*
-
-🎬 .video <video URL>
-
-━━━━━━━━━━━━━━━━━━
-
-🎬 *MOVIE*
-
-🎬 .movie <movie name>
-
-━━━━━━━━━━━━━━━━━━
-
-📥 *DOWNLOAD*
-
-📁 .gdrive <link>
-
-📁 .mediafire <link>
-
-━━━━━━━━━━━━━━━━━━
-
-📱 *TELEGRAM*
-
-📲 .telegram/<channel>
+🤖 *DULARA MD*
+⚡ Version: 1.0.0
+🟢 Status: Online
 
 ╰━━━━━━━━━━━━━━━━━━╯`
             });
 
             return;
           }
-
 
           // ==================================
           // 👑 OWNER
@@ -709,7 +277,8 @@ Example:
               text:
 `╭───「 👑 OWNER 」───╮
 
-🤖 Dulara MD
+🤖 *DULARA MD*
+
 👑 Bot Owner
 
 ╰──────────────────╯`
@@ -717,7 +286,6 @@ Example:
 
             return;
           }
-
 
           // ==================================
           // ℹ️ INFO
@@ -732,6 +300,7 @@ Example:
 🤖 Dulara MD
 ⚡ Version: 1.0.0
 🟢 Status: Online
+📱 WhatsApp: Connected
 
 ╰────────────────────╯`
             });
@@ -739,6 +308,108 @@ Example:
             return;
           }
 
+          // ==================================
+          // 🎬 DIRECT VIDEO URL
+          // ==================================
+
+          if (command.startsWith(".video ")) {
+
+            const videoUrl =
+              text.trim().slice(7).trim();
+
+            if (!videoUrl) {
+
+              await sock.sendMessage(from, {
+                text:
+`╭───「 🎬 VIDEO 」───╮
+
+❌ Video URL එකක් දෙන්න.
+
+📌 Example:
+
+.video https://example.com/video.mp4
+
+╰──────────────────╯`
+              });
+
+              return;
+            }
+
+            if (
+              !videoUrl.startsWith("https://")
+            ) {
+
+              await sock.sendMessage(from, {
+                text:
+                  "❌ HTTPS URL එකක් දෙන්න."
+              });
+
+              return;
+            }
+
+            try {
+
+              await sock.sendMessage(from, {
+                react: {
+                  text: "⏳",
+                  key: msg.key
+                }
+              });
+
+            } catch {}
+
+            await sock.sendMessage(from, {
+              text:
+`╭───「 🎬 VIDEO 」───╮
+
+⏳ Video එක ලබාගනිමින්...
+
+🤖 Please wait...
+
+╰──────────────────╯`
+            });
+
+            try {
+
+              await sock.sendMessage(from, {
+                video: {
+                  url: videoUrl
+                },
+                mimetype: "video/mp4",
+                caption:
+`🎬 *DULARA MD*
+
+✅ Video sent successfully!`
+              });
+
+              try {
+
+                await sock.sendMessage(from, {
+                  react: {
+                    text: "✅",
+                    key: msg.key
+                  }
+                });
+
+              } catch {}
+
+            } catch (error) {
+
+              console.log(
+                "❌ Video Error:",
+                error?.message || error
+              );
+
+              await sock.sendMessage(from, {
+                text:
+`❌ Video එක send කරන්න බැරි වුණා.
+
+🔧 Direct video URL එක valid ද බලන්න.`
+              });
+            }
+
+            return;
+          }
 
         } catch (error) {
 
@@ -748,7 +419,6 @@ Example:
           );
 
         }
-
       }
     );
 
@@ -760,6 +430,10 @@ Example:
     );
 
     isConnecting = false;
+
+    setTimeout(() => {
+      startDularaMD();
+    }, 5000);
   }
 }
 
@@ -768,8 +442,16 @@ Example:
 // 🚀 START BOT
 // ========================================
 
-console.log("================================");
-console.log("🚀 Starting DULARA MD...");
-console.log("================================");
+console.log(
+  "================================"
+);
+
+console.log(
+  "🚀 Starting DULARA MD..."
+);
+
+console.log(
+  "================================"
+);
 
 startDularaMD();
