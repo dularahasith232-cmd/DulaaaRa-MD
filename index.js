@@ -53,33 +53,24 @@ async function startDularaMD() {
       try {
 
         console.log(
-          "⏳ Requesting WhatsApp pairing code..."
+          "⏳ Waiting for WhatsApp connection..."
         );
 
         await new Promise(resolve =>
-          setTimeout(resolve, 10000)
+          setTimeout(resolve, 15000)
         );
 
         const code =
-          await sock.requestPairingCode(
-            phoneNumber
-          );
+          await sock.requestPairingCode(phoneNumber);
 
+        console.log("================================");
+        console.log("📱 DULARA MD PAIRING CODE");
+        console.log("🔑 " + code);
+        console.log("================================");
         console.log(
-          "================================"
+          "📱 WhatsApp → Linked devices → Link a device"
         );
-
-        console.log(
-          "📱 DULARA MD PAIRING CODE"
-        );
-
-        console.log(
-          "🔑 " + String(code)
-        );
-
-        console.log(
-          "================================"
-        );
+        console.log("🔑 Enter the code above");
 
       } catch (error) {
 
@@ -106,17 +97,10 @@ async function startDularaMD() {
 
         if (connection === "open") {
 
-          console.log(
-            "================================"
-          );
+          console.log("================================");
+          console.log("✅ DULARA MD CONNECTED!");
+          console.log("================================");
 
-          console.log(
-            "✅ DULARA MD CONNECTED!"
-          );
-
-          console.log(
-            "================================"
-          );
         }
 
 
@@ -183,34 +167,28 @@ async function startDularaMD() {
 
           const msg = messages[0];
 
-          if (!msg || !msg.message) {
-            return;
-          }
-
+          if (!msg || !msg.message) return;
 
           const from =
             msg.key.remoteJid;
-
 
           const text =
             msg.message.conversation ||
             msg.message.extendedTextMessage?.text ||
             "";
 
-
           const command =
             text.trim().toLowerCase();
 
 
           // ==================================
-          // 🎵 YOUTUBE SONG SEARCH
+          // 🎵 SONG SEARCH
           // ==================================
 
           if (command.startsWith(".song ")) {
 
             const query =
               command.slice(6).trim();
-
 
             if (!query) {
 
@@ -221,7 +199,6 @@ async function startDularaMD() {
 ❌ Song name එකක් දෙන්න.
 
 📌 Example:
-
 .song Deviyange Bare
 
 ╰────────────────────╯`
@@ -245,7 +222,6 @@ async function startDularaMD() {
             try {
 
               // 🤖 Reaction
-
               try {
 
                 await sock.sendMessage(from, {
@@ -269,15 +245,10 @@ async function startDularaMD() {
                   "https://www.googleapis.com/youtube/v3/search",
                   {
                     params: {
-
                       part: "snippet",
-
                       q: query,
-
                       type: "video",
-
                       maxResults: 5,
-
                       key:
                         process.env.YOUTUBE_API_KEY
                     }
@@ -289,7 +260,7 @@ async function startDularaMD() {
                 response.data.items || [];
 
 
-              if (results.length === 0) {
+              if (!results.length) {
 
                 await sock.sendMessage(from, {
                   text:
@@ -325,7 +296,6 @@ async function startDularaMD() {
 
                   const videoId =
                     item.id.videoId;
-
 
                   message +=
 `${index + 1}️⃣ *${title}*
@@ -369,7 +339,7 @@ async function startDularaMD() {
 
 
           // ==================================
-          // 🔢 SONG RESULT SELECTION
+          // 🔢 SONG SELECTION
           // ==================================
 
           if (
@@ -380,10 +350,8 @@ async function startDularaMD() {
             const results =
               songSelections.get(from);
 
-
             const index =
               Number(command) - 1;
-
 
             const selected =
               results[index];
@@ -403,10 +371,8 @@ async function startDularaMD() {
             const title =
               selected.snippet.title;
 
-
             const channel =
               selected.snippet.channelTitle;
-
 
             const videoId =
               selected.id.videoId;
@@ -436,10 +402,6 @@ async function startDularaMD() {
 
 ⏳ Selected successfully!
 
-📥 Authorized audio URL එකක් තිබේ නම්
-
-.songurl <audio-url>
-
 ╰────────────────────╯`
             });
 
@@ -448,12 +410,10 @@ async function startDularaMD() {
 
 
           // ==================================
-          // 📥 AUTHORIZED AUDIO URL
+          // 📥 SONG URL
           // ==================================
 
-          if (
-            command.startsWith(".songurl ")
-          ) {
+          if (command.startsWith(".songurl ")) {
 
             const audioUrl =
               text.trim().slice(9).trim();
@@ -467,18 +427,14 @@ async function startDularaMD() {
 
 📌 Example:
 
-.songurl https://example.com/song.mp3
-
-⚠️ අවසර ඇති audio URL එකක් පමණක් භාවිතා කරන්න.`
+.songurl https://example.com/song.mp3`
               });
 
               return;
             }
 
 
-            if (
-              !audioUrl.startsWith("https://")
-            ) {
+            if (!audioUrl.startsWith("https://")) {
 
               await sock.sendMessage(from, {
                 text:
@@ -510,16 +466,11 @@ async function startDularaMD() {
             try {
 
               await sock.sendMessage(from, {
-
                 audio: {
                   url: audioUrl
                 },
-
-                mimetype:
-                  "audio/mpeg",
-
+                mimetype: "audio/mpeg",
                 ptt: false
-
               });
 
 
@@ -555,12 +506,10 @@ async function startDularaMD() {
 
 
           // ==================================
-          // 🎬 AUTHORIZED VIDEO URL
+          // 🎬 VIDEO URL
           // ==================================
 
-          if (
-            command.startsWith(".video ")
-          ) {
+          if (command.startsWith(".video ")) {
 
             const videoUrl =
               text.trim().slice(7).trim();
@@ -575,10 +524,7 @@ async function startDularaMD() {
 ❌ Video URL එකක් දෙන්න.
 
 📌 Example:
-
 .video https://example.com/video.mp4
-
-⚠️ අවසර ඇති direct video URL එකක් පමණක් භාවිතා කරන්න.
 
 ╰────────────────────╯`
               });
@@ -587,9 +533,7 @@ async function startDularaMD() {
             }
 
 
-            if (
-              !videoUrl.startsWith("https://")
-            ) {
+            if (!videoUrl.startsWith("https://")) {
 
               await sock.sendMessage(from, {
                 text:
@@ -599,8 +543,6 @@ async function startDularaMD() {
               return;
             }
 
-
-            // 🤖 Reaction
 
             try {
 
@@ -629,19 +571,14 @@ async function startDularaMD() {
             try {
 
               await sock.sendMessage(from, {
-
                 video: {
                   url: videoUrl
                 },
-
-                mimetype:
-                  "video/mp4",
-
+                mimetype: "video/mp4",
                 caption:
 `🎬 *DULARA MD*
 
 ✅ Video received successfully!`
-
               });
 
 
@@ -682,9 +619,7 @@ async function startDularaMD() {
           // 🏓 PING
           // ==================================
 
-          if (
-            command === ".ping"
-          ) {
+          if (command === ".ping") {
 
             await sock.sendMessage(from, {
               text:
@@ -703,9 +638,7 @@ async function startDularaMD() {
           // 📋 MENU
           // ==================================
 
-          if (
-            command === ".menu"
-          ) {
+          if (command === ".menu") {
 
             await sock.sendMessage(from, {
               text:
@@ -730,14 +663,14 @@ Example:
 🔢 Reply:
 1 / 2 / 3 / 4 / 5
 
-📥 Authorized audio:
+📥 Audio URL:
 .songurl <audio-url>
 
 ━━━━━━━━━━━━━━━━━━
 
 🎬 *VIDEO*
 
-🎬 .video <authorized video URL>
+🎬 .video <video URL>
 
 ━━━━━━━━━━━━━━━━━━
 
@@ -749,9 +682,9 @@ Example:
 
 📥 *DOWNLOAD*
 
-📁 .gdrive <authorized link>
+📁 .gdrive <link>
 
-📁 .mediafire <authorized link>
+📁 .mediafire <link>
 
 ━━━━━━━━━━━━━━━━━━
 
@@ -770,9 +703,7 @@ Example:
           // 👑 OWNER
           // ==================================
 
-          if (
-            command === ".owner"
-          ) {
+          if (command === ".owner") {
 
             await sock.sendMessage(from, {
               text:
@@ -792,9 +723,7 @@ Example:
           // ℹ️ INFO
           // ==================================
 
-          if (
-            command === ".info"
-          ) {
+          if (command === ".info") {
 
             await sock.sendMessage(from, {
               text:
@@ -839,16 +768,8 @@ Example:
 // 🚀 START BOT
 // ========================================
 
-console.log(
-  "================================"
-);
-
-console.log(
-  "🚀 Starting DULARA MD..."
-);
-
-console.log(
-  "================================"
-);
+console.log("================================");
+console.log("🚀 Starting DULARA MD...");
+console.log("================================");
 
 startDularaMD();
