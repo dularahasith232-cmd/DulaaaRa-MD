@@ -76,7 +76,40 @@ async function startDularaMD() {
       "";
 
     const command = text.trim().toLowerCase();
+// SONG - Authorized audio URL only
+if (command.startsWith(".song ")) {
+  const songUrl = command.slice(6).trim();
 
+  if (!songUrl.startsWith("https://")) {
+    await sock.sendMessage(from, {
+      text: "❌ Valid HTTPS audio URL එකක් දෙන්න."
+    });
+    return;
+  }
+
+  await sock.sendMessage(from, {
+    text: "🎵 Song එක download කරමින්... ⏳"
+  });
+
+  try {
+    await sock.sendMessage(from, {
+      audio: { url: songUrl },
+      mimetype: "audio/mpeg",
+      ptt: false
+    });
+
+    await sock.sendMessage(from, {
+      text: "✅ Song එක ලැබුණා! 🎵"
+    });
+
+  } catch (error) {
+    console.log("❌ Song error:", error.message);
+
+    await sock.sendMessage(from, {
+      text: "❌ Audio එක send කරන්න බැරි වුණා."
+    });
+  }
+}
     // PING
     if (command === ".ping") {
       await sock.sendMessage(from, {
