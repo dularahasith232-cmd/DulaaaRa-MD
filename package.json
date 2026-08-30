@@ -9,6 +9,8 @@
   "dependencies": {
     "@whiskeysockets/baileys": "latest",
     "pino": "latest",
-    "axios": "latest"
+    "axios": "latest",
+    "cheerio": "latest",
+    "node-fetch": "latest"
   }
 }
