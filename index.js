@@ -1,7 +1,8 @@
 const {
   default: makeWASocket,
   useMultiFileAuthState,
-  DisconnectReason
+  DisconnectReason,
+  Browsers
 } = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
@@ -26,7 +27,9 @@ async function startDularaMD() {
     const sock = makeWASocket({
       auth: state,
       logger: pino({ level: "silent" }),
-      printQRInTerminal: false
+      browser: Browsers.macOS("Desktop"),
+      printQRInTerminal: false,
+      syncFullHistory: false
     });
 
     sock.ev.on("creds.update", saveCreds);
@@ -53,16 +56,18 @@ async function startDularaMD() {
       try {
 
         console.log(
-          "⏳ Waiting for WhatsApp connection..."
+          "⏳ Requesting WhatsApp pairing code..."
         );
 
-        await new Promise(resolve =>
-          setTimeout(resolve, 15000)
-        );
+        const cleanNumber =
+          phoneNumber
+            .replace(/\+/g, "")
+            .replace(/\s/g, "")
+            .replace(/-/g, "");
 
         const code =
           await sock.requestPairingCode(
-            phoneNumber
+            cleanNumber
           );
 
         console.log(
