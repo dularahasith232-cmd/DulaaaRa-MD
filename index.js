@@ -27,19 +27,20 @@ async function startDularaMD() {
     }
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 5000));
+  console.log("⏳ Requesting WhatsApp pairing code...");
 
-      const code = await sock.requestPairingCode(phoneNumber);
+  await new Promise(resolve => setTimeout(resolve, 10000));
 
-      console.log("================================");
-      console.log("📱 DULARA MD PAIRING CODE");
-      console.log("🔑 " + code);
-      console.log("================================");
+  const code = await sock.requestPairingCode(phoneNumber);
 
-    } catch (error) {
-      console.log("❌ Pairing error:", error);
-    }
-  }
+  console.log("================================");
+  console.log("📱 DULARA MD PAIRING CODE");
+  console.log("🔑 " + String(code));
+  console.log("================================");
+
+} catch (error) {
+  console.log("❌ Pairing error:", error?.message || error);
+}
 
   sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
 
