@@ -7,6 +7,12 @@ const {
 const pino = require("pino");
 const axios = require("axios");
 
+// ========================================
+// DULARA MD
+// ========================================
+
+const songSelections = new Map();
+
 async function startDularaMD() {
 
   const { state, saveCreds } =
@@ -19,9 +25,9 @@ async function startDularaMD() {
 
   sock.ev.on("creds.update", saveCreds);
 
-  // ================================
+  // ========================================
   // WHATSAPP PAIRING
-  // ================================
+  // ========================================
 
   if (!state.creds.registered) {
 
@@ -54,22 +60,23 @@ async function startDularaMD() {
         "❌ Pairing error:",
         error?.message || error
       );
-
     }
   }
 
-  // ================================
+  // ========================================
   // CONNECTION
-  // ================================
+  // ========================================
 
   sock.ev.on(
     "connection.update",
     ({ connection, lastDisconnect }) => {
 
       if (connection === "open") {
+
         console.log("================================");
         console.log("✅ DULARA MD CONNECTED!");
         console.log("================================");
+
       }
 
       if (connection === "close") {
@@ -95,15 +102,14 @@ async function startDularaMD() {
           console.log(
             "❌ WhatsApp logged out."
           );
-
         }
       }
     }
   );
 
-  // ================================
-  // MESSAGES
-  // ================================
+  // ========================================
+  // MESSAGE HANDLER
+  // ========================================
 
   sock.ev.on(
     "messages.upsert",
@@ -123,9 +129,9 @@ async function startDularaMD() {
       const command =
         text.trim().toLowerCase();
 
-      // ================================
-      // YOUTUBE SONG SEARCH
-      // ================================
+      // ========================================
+      // 🎵 SONG SEARCH
+      // ========================================
 
       if (command.startsWith(".song ")) {
 
@@ -136,9 +142,11 @@ async function startDularaMD() {
 
           await sock.sendMessage(from, {
             text:
-              "🎵 *DULARA MD SONG SEARCH*\n\n" +
-              "උදාහරණය:\n" +
-              "`.song Deviyange Bare Rap`"
+              "╭───「 🎵 DULARA MD 」───╮\n\n" +
+              "❌ Song name එකක් දෙන්න.\n\n" +
+              "📌 Example:\n" +
+              ".song Deviyange Bare Rap\n\n" +
+              "╰────────────────────╯"
           });
 
           return;
@@ -156,9 +164,11 @@ async function startDularaMD() {
 
         try {
 
+          // Searching message
           await sock.sendMessage(from, {
             text:
-              "🔎 YouTube එකේ search කරමින්...\n⏳ Please wait..."
+              "🤖 🔎 YouTube එකේ search කරමින්...\n\n" +
+              "⏳ Please wait..."
           });
 
           const response =
@@ -179,7 +189,7 @@ async function startDularaMD() {
           const results =
             response.data.items;
 
-          if (!results || !results.length) {
+          if (!results || results.length === 0) {
 
             await sock.sendMessage(from, {
               text:
@@ -188,6 +198,9 @@ async function startDularaMD() {
 
             return;
           }
+
+          // Save results for 1 / 2 / 3 / 4 / 5 selection
+          songSelections.set(from, results);
 
           let message =
             "╭───「 🎵 DULARA MD 」───╮\n\n";
@@ -198,14 +211,23 @@ async function startDularaMD() {
           results.forEach(
             (item, index) => {
 
-              message +=
-                `${index + 1}️⃣ *${item.snippet.title}*\n`;
+              const title =
+                item.snippet.title;
+
+              const channel =
+                item.snippet.channelTitle;
+
+              const videoId =
+                item.id.videoId;
 
               message +=
-                `👤 ${item.snippet.channelTitle}\n`;
+                `${index + 1}️⃣ *${title}*\n`;
 
               message +=
-                `🔗 https://youtu.be/${item.id.videoId}\n\n`;
+                `👤 ${channel}\n`;
+
+              message +=
+                `🔗 https://youtu.be/${videoId}\n\n`;
             }
           );
 
@@ -213,7 +235,10 @@ async function startDularaMD() {
             "╰────────────────────╯\n\n";
 
           message +=
-            `📌 *Reply කරන්න: 1 - ${results.length}*`;
+            `📌 *Reply කරන්න: 1 - ${results.length}*\n`;
+
+          message +=
+            "🤖 Number එක විතරක් යවන්න.";
 
           await sock.sendMessage(from, {
             text: message
@@ -236,16 +261,69 @@ async function startDularaMD() {
         return;
       }
 
-      // ================================
-      // PING
-      // ================================
+      // ========================================
+      // 🎵 SONG RESULT SELECTION
+      // ========================================
+
+      if (
+        /^[1-5]$/.test(command) &&
+        songSelections.has(from)
+      ) {
+
+        const results =
+          songSelections.get(from);
+
+        const index =
+          Number(command) - 1;
+
+        const selected =
+          results[index];
+
+        if (!selected) {
+
+          await sock.sendMessage(from, {
+            text:
+              "❌ ඒ number එකේ result එකක් නැහැ."
+          });
+
+          return;
+        }
+
+        const title =
+          selected.snippet.title;
+
+        const channel =
+          selected.snippet.channelTitle;
+
+        const videoId =
+          selected.id.videoId;
+
+        await sock.sendMessage(from, {
+          text:
+            "╭───「 🎵 SELECTED 」───╮\n\n" +
+            `🎵 *${title}*\n\n` +
+            `👤 Channel: ${channel}\n\n` +
+            `🔗 https://youtu.be/${videoId}\n\n` +
+            "✅ Song එක select කළා!\n\n" +
+            "╰────────────────────╯"
+        });
+
+        // Clear selection
+        songSelections.delete(from);
+
+        return;
+      }
+
+      // ========================================
+      // 🏓 PING
+      // ========================================
 
       if (command === ".ping") {
 
         await sock.sendMessage(from, {
           text:
             "🏓 *Pong!*\n\n" +
-            "🤖 Dulara MD\n" +
+            "🤖 *Dulara MD*\n" +
             "⚡ Bot is Online!\n" +
             "🟢 Status: Connected"
         });
@@ -253,14 +331,13 @@ async function startDularaMD() {
         return;
       }
 
-      // ================================
-      // MENU
-      // ================================
+      // ========================================
+      // 📋 MENU
+      // ========================================
 
       if (command === ".menu") {
 
         await sock.sendMessage(from, {
-
           text:
 `╭━━━「 🤖 DULARA MD 」━━━╮
 
@@ -271,34 +348,46 @@ async function startDularaMD() {
 👑 .owner
 ℹ️ .info
 
-🎵 *MEDIA*
+━━━━━━━━━━━━━━━━━━
+
+🎵 *SONG*
 
 🎵 .song <song name>
 
-🎬 *MOVIES*
+Example:
+.song Deviyange Bare Rap
 
-🎥 .movie <movie name>
+━━━━━━━━━━━━━━━━━━
 
-📥 *DOWNLOADS*
+🎬 *MOVIE*
 
-🎬 .video <YouTube link>
+🎬 .movie <movie name>
+
+━━━━━━━━━━━━━━━━━━
+
+📥 *DOWNLOAD*
+
+🎥 .video <YouTube link>
+
 📁 .gdrive <link>
+
 📁 .mediafire <link>
+
+━━━━━━━━━━━━━━━━━━
 
 📱 *TELEGRAM*
 
 📲 .telegram/<channel>
 
-╰━━━━━━━━━━━━━━━━━━━━╯`
-
+╰━━━━━━━━━━━━━━━━━━╯`
         });
 
         return;
       }
 
-      // ================================
-      // OWNER
-      // ================================
+      // ========================================
+      // 👑 OWNER
+      // ========================================
 
       if (command === ".owner") {
 
@@ -313,18 +402,18 @@ async function startDularaMD() {
         return;
       }
 
-      // ================================
-      // INFO
-      // ================================
+      // ========================================
+      // ℹ️ INFO
+      // ========================================
 
       if (command === ".info") {
 
         await sock.sendMessage(from, {
           text:
             "╭───「 ℹ️ DULARA MD 」───╮\n\n" +
-            "🤖 Version: 1.0.0\n" +
-            "🟢 Status: Online\n" +
-            "⚡ Powered by Baileys\n\n" +
+            "🤖 Dulara MD\n" +
+            "⚡ Version: 1.0.0\n" +
+            "🟢 Status: Online\n\n" +
             "╰────────────────────╯"
         });
 
@@ -335,8 +424,10 @@ async function startDularaMD() {
   );
 }
 
-// ================================
+// ========================================
 // START BOT
-// ================================
+// ========================================
+
+console.log("🚀 Starting DULARA MD...");
 
 startDularaMD();
