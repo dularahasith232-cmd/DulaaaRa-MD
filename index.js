@@ -5,7 +5,7 @@ const {
 } = require("@whiskeysockets/baileys");
 
 const pino = require("pino");
-
+const axios = require("axios");
 async function startDularaMD() {
   const { state, saveCreds } =
     await useMultiFileAuthState("./session");
@@ -76,6 +76,72 @@ async function startDularaMD() {
       "";
 
     const command = text.trim().toLowerCase();
+    // YOUTUBE SONG SEARCH
+if (command.startsWith(".song ")) {
+  const query = command.slice(6).trim();
+
+  if (!query) {
+    await sock.sendMessage(from, {
+      text: "🎵 උදාහරණය:\n.song Deviyange Bare Rap"
+    });
+    return;
+  }
+
+  if (!process.env.YOUTUBE_API_KEY) {
+    await sock.sendMessage(from, {
+      text: "❌ YouTube API Key එක setup කරලා නැහැ."
+    });
+    return;
+  }
+
+  try {
+    const response = await axios.get(
+      "https://www.googleapis.com/youtube/v3/search",
+      {
+        params: {
+          part: "snippet",
+          q: query,
+          type: "video",
+          maxResults: 5,
+          key: process.env.YOUTUBE_API_KEY
+        }
+      }
+    );
+
+    const results = response.data.items;
+
+    if (!results.length) {
+      await sock.sendMessage(from, {
+        text: "❌ Song එක හම්බුණේ නැහැ."
+      });
+      return;
+    }
+
+    let message = `🎵 *DULARA MD — SONG SEARCH*\n\n`;
+
+    results.forEach((item, index) => {
+      message +=
+        `${index + 1}️⃣ ${item.snippet.title}\n` +
+        `👤 ${item.snippet.channelTitle}\n` +
+        `🔗 https://youtu.be/${item.id.videoId}\n\n`;
+    });
+
+    message += `📌 Reply කරන්න: 1 - ${results.length}`;
+
+    await sock.sendMessage(from, {
+      text: message
+    });
+
+  } catch (error) {
+    console.log("❌ YouTube Search Error:", error.message);
+
+    await sock.sendMessage(from, {
+      text: "❌ YouTube search කරන්න බැරි වුණා."
+    });
+  }
+
+  return;
+}
 // SONG - Authorized audio URL only
 if (command.startsWith(".song ")) {
   const songUrl = command.slice(6).trim();
