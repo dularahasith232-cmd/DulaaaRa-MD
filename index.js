@@ -27,24 +27,28 @@ async function startDularaMD() {
     }
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
-const code = await sock.requestPairingCode(phoneNumber);
+      const code = await sock.requestPairingCode(phoneNumber);
+
       console.log("================================");
       console.log("📱 DULARA MD PAIRING CODE");
       console.log("🔑 " + code);
       console.log("================================");
+
     } catch (error) {
-      console.log("❌ Pairing error:", error.message);
+      console.log("❌ Pairing error:", error);
     }
   }
 
   sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
+
     if (connection === "open") {
       console.log("✅ Dulara MD Connected!");
     }
 
     if (connection === "close") {
+
       const shouldReconnect =
         lastDisconnect?.error?.output?.statusCode !==
         DisconnectReason.loggedOut;
@@ -59,10 +63,11 @@ const code = await sock.requestPairingCode(phoneNumber);
   });
 
   sock.ev.on("messages.upsert", async ({ messages }) => {
+
     const msg = messages[0];
 
     if (!msg.message) return;
-console.log("📩 MESSAGE:", JSON.stringify(msg, null, 2));
+
     const from = msg.key.remoteJid;
 
     const text =
@@ -75,7 +80,8 @@ console.log("📩 MESSAGE:", JSON.stringify(msg, null, 2));
     // PING
     if (command === ".ping") {
       await sock.sendMessage(from, {
-        text: "🏓 Pong!\n\n🤖 Dulara MD\n⚡ Bot is Online!"
+        text:
+          "🏓 Pong!\n\n🤖 Dulara MD\n⚡ Bot is Online!"
       });
     }
 
@@ -109,9 +115,11 @@ console.log("📩 MESSAGE:", JSON.stringify(msg, null, 2));
     // INFO
     if (command === ".info") {
       await sock.sendMessage(from, {
-        text: "🤖 Dulara MD\n⚡ Version 1.0.0\n🟢 Online"
+        text:
+          "🤖 Dulara MD\n⚡ Version 1.0.0\n🟢 Online"
       });
     }
+
   });
 }
 
